@@ -29,6 +29,7 @@ For further information type
 import time
 import datetime
 from functools import wraps
+from decimal import Decimal
 
 import pandas as pd
 
@@ -604,7 +605,7 @@ class KrakenAPI(object):
 
             # dtypes
             for col in ['open', 'high', 'low', 'close', 'vwap', 'volume']:
-                ohlc.loc[:, col] = ohlc[col].astype(float)
+                ohlc.loc[:, col] = ohlc[col].apply(Decimal)
 
             return ohlc, last
 
@@ -775,7 +776,7 @@ class KrakenAPI(object):
 
             # dtypes
             for col in ['price', 'volume']:
-                trades.loc[:, col] = trades[col].astype(float)
+                trades.loc[:, col] = trades[col].apply(Decimal)
 
         return trades, last
 
@@ -861,8 +862,8 @@ class KrakenAPI(object):
             spread.set_index('dtime', inplace=True)
 
             # spread
-            spread.loc[:, 'bid'] = spread.bid.astype(float)
-            spread.loc[:, 'ask'] = spread.ask.astype(float)
+            spread.loc[:, 'bid'] = spread.bid.apply(Decimal)
+            spread.loc[:, 'ask'] = spread.ask.apply(Decimal)
             spread['spread'] = spread.ask - spread.bid
 
         return spread, last
@@ -915,7 +916,7 @@ class KrakenAPI(object):
         balance = pd.DataFrame(index=['vol'], data=res['result']).T
 
         if not balance.empty:
-            balance.loc[:, 'vol'] = balance.vol.astype(float)
+            balance.loc[:, 'vol'] = balance.vol.apply(Decimal)
 
         return balance
 
@@ -985,7 +986,7 @@ class KrakenAPI(object):
         tradebalance = pd.DataFrame(index=[asset], data=res['result']).T
 
         if not tradebalance.empty:
-            tradebalance.loc[:, asset] = tradebalance[asset].astype(float)
+            tradebalance.loc[:, asset] = tradebalance[asset].apply(Decimal)
 
         return tradebalance
 
@@ -1099,7 +1100,7 @@ class KrakenAPI(object):
                 openorders.loc[:, col] = openorders[col].astype(int)
             for col in ['cost', 'fee', 'price', 'vol', 'vol_exec',
                         'descr_price', 'descr_price2']:
-                openorders.loc[:, col] = openorders[col].astype(float)
+                openorders.loc[:, col] = openorders[col].apply(Decimal)
 
         return openorders
 
@@ -1190,7 +1191,7 @@ class KrakenAPI(object):
                 closed.loc[:, col] = closed[col].astype(int)
             for col in ['cost', 'fee', 'price', 'vol', 'vol_exec',
                         'descr_price', 'descr_price2']:
-                closed.loc[:, col] = closed[col].astype(float)
+                closed.loc[:, col] = closed[col].apply(Decimal)
 
         return closed, count
 
@@ -1256,10 +1257,10 @@ class KrakenAPI(object):
             orders = pd.concat((orders, descr), axis=1)
             for col in ['closetm', 'expiretm', 'opentm', 'starttm']:
                 if col in orders:
-                    orders.loc[:, col] = orders[col].astype(float)
+                    orders.loc[:, col] = orders[col].apply(Decimal)
             for col in ['cost', 'fee', 'price', 'vol', 'vol_exec',
                         'descr_price', 'descr_price2']:
-                orders.loc[:, col] = orders[col].astype(float)
+                orders.loc[:, col] = orders[col].apply(Decimal)
 
         return orders
 
@@ -1387,7 +1388,7 @@ class KrakenAPI(object):
 
             # set dtypes
             for col in ['cost', 'fee', 'margin', 'price', 'time', 'vol']:
-                trades.loc[:, col] = trades[col].astype(float)
+                trades.loc[:, col] = trades[col].apply(Decimal)
 
         return trades, count
 
@@ -1570,7 +1571,7 @@ class KrakenAPI(object):
 
     @crl_sleep
     @callratelimiter('other')
-    def get_withdrawal_information(self, key, asset='XBT', amount=0.0, otp=None):
+    def get_withdrawal_information(self, key, asset='XBT', amount=Decimal(0.0), otp=None):
         """Retrieve fee information about potential withdrawals for a particular asset, key and amount.
 
         Return a ``pd.DataFrame`` of withdrawal info.
@@ -1583,7 +1584,7 @@ class KrakenAPI(object):
         asset : str (default='XBT')
             Asset being withdrawn.
 
-        amount : float (default=0.0)
+        amount : decimal.Decimal (default=Decimal(0.0))
             Amount to be withdrawn.
 
         otp : str
@@ -1622,8 +1623,17 @@ class KrakenAPI(object):
         if len(res['error']) > 0:
             raise KrakenAPIError(res['error'])
 
-        # create dataframe
-        withdrawal_info = pd.DataFrame(index=[asset], data=res['result']).T
+        # create dataframe and convert types
+        withdrawal_info = pd.DataFrame(index=[asset], data=res['result']).T.apply(
+            lambda x: [
+                x["method"],
+                Decimal(x["limit"]),
+                Decimal(x["amount"]),
+                Decimal(x["fee"])
+            ],
+            axis=0,
+            result_type="broadcast"
+        )
 
         return withdrawal_info
 
@@ -1864,7 +1874,7 @@ class KrakenAPI(object):
 
             # set dtypes
             for col in ['cost', 'fee', 'margin', 'price', 'time', 'vol']:
-                trades.loc[:, col] = trades[col].astype(float)
+                trades.loc[:, col] = trades[col].apply(Decimal)
 
         return trades
 
@@ -2044,7 +2054,7 @@ class KrakenAPI(object):
 
             # dtypes
             for col in ['amount', 'balance', 'fee']:
-                ledgers.loc[:, col] = ledgers[col].astype(float)
+                ledgers.loc[:, col] = ledgers[col].apply(Decimal)
             ledgers.loc[:, 'time'] = ledgers.time.astype(int)
 
         return ledgers, count
@@ -2114,7 +2124,7 @@ class KrakenAPI(object):
 
             # dtypes
             for col in ['amount', 'balance', 'fee']:
-                ledgers.loc[:, col] = ledgers[col].astype(float)
+                ledgers.loc[:, col] = ledgers[col].apply(Decimal)
             ledgers.loc[:, 'time'] = ledgers.time.astype(int)
 
         return ledgers
@@ -2202,19 +2212,19 @@ class KrakenAPI(object):
             raise KrakenAPIError(res['error'])
 
         # create dataframe
-        volume = float(res['result']['volume'])
+        volume = Decimal(res['result']['volume'])
 
         # fees
         try:
             fees = pd.DataFrame(res['result']['fees'])
             for col in fees.columns:
-                fees.loc[:, col] = fees[col].astype(float)
+                fees.loc[:, col] = fees[col].apply(Decimal)
         except KeyError:
             fees = None
         try:
             fees_maker = pd.DataFrame(res['result']['fees_maker'])
             for col in fees_maker.columns:
-                fees_maker.loc[:, col] = fees_maker[col].astype(float)
+                fees_maker.loc[:, col] = fees_maker[col].apply(Decimal)
         except KeyError:
             fees_maker = None
 
