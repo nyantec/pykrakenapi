@@ -1652,7 +1652,7 @@ class KrakenAPI(object):
         asset : str (default='XBT')
             Asset being withdrawn.
 
-        amount : float (default=0.0)
+        amount : Decimal (default=0.0)
             Amount to be withdrawn.
 
         otp : str
@@ -2153,7 +2153,7 @@ class KrakenAPI(object):
         currency : str
             Currency (ZUSD).
 
-        volume : float
+        volume : Decimal
             Current discount volume.
 
         fees : pd.DataFrame
@@ -2715,7 +2715,7 @@ class KrakenAPI(object):
         ----------
         asset : str
             Asset to stake (asset ID or `altname`)
-        amount : float
+        amount : Decimal
             Amount of the asset to stake
         method : str
             Name of the staking option to use (refer to the Staking Assets
@@ -2767,7 +2767,7 @@ class KrakenAPI(object):
         asset : str
             Asset to unstake (asset ID or `altname`). Must be a valid staking
             asset (e.g. XBT.M, XTZ.S, ADA.S)
-        amount : float
+        amount : Decimal
             Amount of the asset to stake
         otp : str
             Two-factor password (if two-factor enabled, otherwise not required)
