@@ -1639,7 +1639,7 @@ class KrakenAPI(object):
 
     @crl_sleep
     @callratelimiter('other')
-    def withdraw_funds(self, key, asset='XBT', amount=0.0, otp=None):
+    def withdraw_funds(self, key, asset='XBT', amount=Decimal(0.0), otp=None):
         """Make a withdrawal request.
 
         Initialize a withdrawal and return the withdrawal refid.
